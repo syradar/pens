@@ -98,7 +98,13 @@ const VALID_ATTRIBUTES = new Set([
 	"wrap",
 ]);
 
-function validateAttribut(attr) {
+/**
+ * Validates if the given attribute is valid.
+ * @param {string} attr - The attribute to validate.
+ * @returns {boolean} - Returns true if the attribute is valid.
+ * @throws {Error} - Throws an error if the attribute is not valid.
+ */
+function validateAttribute(attr) {
 	if (!VALID_ATTRIBUTES.has(attr)) {
 		throw new Error(`${attr} is not a valid attribute`);
 	}
@@ -107,9 +113,10 @@ function validateAttribut(attr) {
 }
 
 /**
- * Updates a clones attributes
- * @param {HTMLElement} clone
- * @param {{}} values
+ * Updates a clone's attributes based on the provided values.
+ * @param {DocumentFragment} clone - The cloned template element.
+ * @param {Object} values - The values to set on the template.
+ * @returns {DocumentFragment} - The updated clone.
  */
 function updateTemplateValues(clone, values) {
 	for (const [key, attributes] of Object.entries(values)) {
@@ -122,18 +129,25 @@ function updateTemplateValues(clone, values) {
 		for (const [attr, value] of Object.entries(attributes)) {
 			if (attr === "textContent") {
 				element.textContent = value;
-			} else if (validateAttribut(attr)) {
+			} else if (validateAttribute(attr)) {
 				element.setAttribute(attr, value);
 			}
 		}
 
-		// Remove the data-template attribute after updating
+		// Remove the data-template attribute after updating since we don't want
+		// the templating to mess with other scripts or styling.
 		element.removeAttribute("data-template");
 	}
 
 	return clone;
 }
 
+/**
+ * Retrieves a template element from the DOM.
+ * @param {string} selector - The CSS selector for the template.
+ * @returns {HTMLTemplateElement} - The template element.
+ * @throws {Error} - Throws an error if the template is not found or is not a valid template element.
+ */
 function getTemplate(selector) {
 	const $template = document.querySelector(selector);
 
@@ -148,54 +162,69 @@ function getTemplate(selector) {
 	return $template;
 }
 
+/**
+ * Clones the content of a given template element.
+ * @param {HTMLTemplateElement} $template - The template element to clone.
+ * @returns {DocumentFragment} - The cloned content.
+ */
 function cloneTemplate($template) {
 	const clone = $template.content.cloneNode(true);
+
+	if (!(clone instanceof DocumentFragment)) {
+		throw new Error(
+			`Template could not be cloned to a DocumentFragment: ${clone}`,
+		);
+	}
 
 	return clone;
 }
 
 /**
- *
- * @param {{}} config
- * @param {{}} data
- * @returns {{}}
+ * Returns a function to render a template with provided data.
+ * @param {Object} options - Options for rendering the template.
+ * @param {string} options.template - The template selector.
+ * @param {HTMLElement} options.$container - The container element to render into.
+ * @param {Function} options.config - The configuration function to map data to template values.
+ * @param {boolean} [options.debug] - Enable performance debugging.
+ * @returns {Function} - The template renderer function.
  */
-function validateConfig(config, data) {
-	const newConfig = {};
-
-	for (const [templateItem, attributes] of Object.entries(config)) {
-		newConfig[templateItem] = {};
-
-		for (const [attr, value] of Object.entries(attributes)) {
-			if (data[value] === undefined) {
-				throw new Error(
-					`Data key '${value}' is missing for element ID '${templateItem}'.`,
-				);
-			}
-
-			newConfig[templateItem][attr] = data[value];
-		}
+export function getTemplateRenderer({ template, $container, config, debug }) {
+	if (typeof config !== "function") {
+		throw new Error(
+			`The config should be a function but got ${typeof config} instead.`,
+		);
 	}
-
-	return newConfig;
-}
-
-export function getTemplateRenderer({ template, container, config, debug }) {
-	if (debug) {
-		performance.mark("templateRenderStart");
+	if (!($container instanceof HTMLElement)) {
+		throw new Error(
+			`The $container must be a valid HTMLElement but got ${$container} instead.`,
+		);
 	}
 
 	const $template = getTemplate(template);
 
 	return (data) => {
-		const templateChildren = data.map((d) => {
+		if (debug) {
+			performance.mark("templateRenderStart");
+		}
+
+		const renderData = Array.isArray(data) ? data : [data];
+
+		if (renderData.length <= 0) {
+			if (debug) {
+				console.warn("No data provided for rendering");
+			}
+			return;
+		}
+
+		const $fragment = document.createDocumentFragment();
+
+		for (const item of data) {
 			const clone = cloneTemplate($template);
-			const values = validateConfig(config, d);
+			const values = config(item);
+			$fragment.appendChild(updateTemplateValues(clone, values));
+		}
 
-			return updateTemplateValues(clone, values);
-		});
-
-		container.replaceChildren(...templateChildren);
+		$container.replaceChildren($fragment);
 
 		if (debug) {
 			performance.mark("templateRenderEnd");
