@@ -60,17 +60,21 @@ async function fetchAndDisplayResults(templateRenderer) {
 
 async function initApp() {
 	const resultsContainer = document.getElementById("results-container");
+
 	const templateRenderer = getTemplateRenderer({
+		// Selctor to the template element
 		template: "#result-template",
-		container: resultsContainer,
-		config: {
-			category: { textContent: "category" },
-			link: { textContent: "linkText", href: "linkUrl" },
-		},
-		debug: false,
+		// Where we add the template children
+		$container: resultsContainer,
+		// Function of dataSetTemplate items and attribute map to pull out from the json data
+		config: (data) => ({
+			category: { textContent: data.category },
+			link: { textContent: data.linkText, href: data.linkUrl, class: "link" },
+		}),
+		debug: true,
 	});
 
-	fetchAndDisplayResults(templateRenderer);
+	await fetchAndDisplayResults(templateRenderer);
 }
 
 // Call the function to fetch and display results when the page loads
