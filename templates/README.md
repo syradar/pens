@@ -1,4 +1,4 @@
-# Template Renderer Documentation
+# Template Renderer
 
 ## Overview
 
@@ -22,7 +22,7 @@ This template renderer is designed to facilitate efficient and dynamic rendering
 
    ```html
    <template id="item-template">
-     <div class="item" data-template="item">
+     <div>
        <h3 data-template="title"></h3>
        <p data-template="description"></p>
        <a data-template="link">Read more</a>
