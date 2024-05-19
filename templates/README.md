@@ -13,7 +13,7 @@ This template renderer is designed to facilitate efficient and dynamic rendering
    Ensure the script is included in your HTML file or bundled using your preferred JavaScript bundler.
 
    ```html
-   <script src="path/to/template-renderer.js"></script>
+   <script src="path/to/template.js"></script>
    ```
 
 ### Usage 📝
