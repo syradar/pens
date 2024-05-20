@@ -1,3 +1,19 @@
+/**
+ * @typedef {("accept"|"accept-charset"|"accesskey"|"action"|"align"|"alt"|"async"|"autocomplete"|"autofocus"|
+ * "autoplay"|"bgcolor"|"border"|"charset"|"checked"|"cite"|"class"|"color"|"cols"|"colspan"|"content"|
+ * "contenteditable"|"controls"|"coords"|"data"|"datetime"|"default"|"defer"|"dir"|"dirname"|"disabled"|
+ * "download"|"draggable"|"dropzone"|"enctype"|"for"|"form"|"formaction"|"headers"|"height"|"hidden"|"high"|
+ * "href"|"hreflang"|"http-equiv"|"id"|"ismap"|"kind"|"label"|"lang"|"list"|"loop"|"low"|"max"|"maxlength"|
+ * "media"|"method"|"min"|"multiple"|"muted"|"name"|"novalidate"|"open"|"optimum"|"pattern"|"placeholder"|
+ * "poster"|"preload"|"readonly"|"rel"|"required"|"reversed"|"rows"|"rowspan"|"sandbox"|"scope"|"selected"|
+ * "shape"|"size"|"sizes"|"span"|"spellcheck"|"src"|"srcdoc"|"srclang"|"srcset"|"start"|"step"|"style"|
+ * "tabindex"|"target"|"title"|"translate"|"type"|"usemap"|"value"|"width"|"wrap")} ValidAttributes
+ */
+
+/**
+ *
+ * @type {Set<ValidAttributes>}
+ */
 const VALID_ATTRIBUTES = new Set([
 	"accept",
 	"accept-charset",
@@ -101,10 +117,11 @@ const VALID_ATTRIBUTES = new Set([
 /**
  * Validates if the given attribute is valid.
  * @param {string} attr - The attribute to validate.
- * @returns {boolean} - Returns true if the attribute is valid.
+ * @returns {attr is ValidAttributes} - Returns true if the attribute is valid.
  * @throws {Error} - Throws an error if the attribute is not valid.
  */
 function validateAttribute(attr) {
+	// @ts-ignore
 	if (!VALID_ATTRIBUTES.has(attr)) {
 		throw new Error(`${attr} is not a valid attribute`);
 	}
@@ -113,9 +130,23 @@ function validateAttribute(attr) {
 }
 
 /**
+ * @typedef {Object<ValidAttributes|"textContent", string>} DataValues
+ */
+/**
+ * @typedef {{[key: string]: DataValues}} ConfigData
+ */
+
+const asd = getTemplateRenderer({
+	config: (data) => ({
+		/** @type {DataValues} test */
+		test: {},
+	}),
+});
+
+/**
  * Updates a clone's attributes based on the provided values.
  * @param {DocumentFragment} clone - The cloned template element.
- * @param {Object} values - The values to set on the template.
+ * @param {DataValues} values - The values to set on the template.
  * @returns {DocumentFragment} - The updated clone.
  */
 function updateTemplateValues(clone, values) {
@@ -184,9 +215,10 @@ function cloneTemplate($template) {
  * @param {Object} options - Options for rendering the template.
  * @param {string} options.template - The template selector.
  * @param {HTMLElement} options.$container - The container element to render into.
- * @param {Function} options.config - The configuration function to map data to template values.
+ * @param {function(T): DataValues} options.config - The configuration function to map data to template values.
  * @param {boolean} [options.debug] - Enable performance debugging.
- * @returns {Function} - The template renderer function.
+ * @returns {function(Array<T>): void} - The template renderer function.
+ * @template T
  */
 export function getTemplateRenderer({ template, $container, config, debug }) {
 	if (typeof config !== "function") {

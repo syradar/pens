@@ -62,7 +62,7 @@ async function initApp() {
 	const resultsContainer = document.getElementById("results-container");
 
 	const templateRenderer = getTemplateRenderer({
-		// Selctor to the template element
+		// Selector to the template element
 		template: "#result-template",
 		// Where we add the template children
 		$container: resultsContainer,
