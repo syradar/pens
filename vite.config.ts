@@ -1,16 +1,16 @@
 import { defineConfig } from "vite"
 
-export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
+export default defineConfig(({ command }) => {
   if (command === "serve") {
     return {
-      root: "./",
+      root: ".",
       assetsInclude: ["index.css"],
     }
   }
   // command === 'build'
   return {
-    root: "./",
+    root: ".",
     assetsInclude: ["index.css"],
-    // build specific config
+    base: "/",
   }
 })
