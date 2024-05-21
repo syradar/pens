@@ -204,7 +204,7 @@ function cloneTemplate(templateEl) {
  * @template T
  * @typedef {Object} TemplateRendererOptions<T>
  * @property {string} template - The selector for the template element.
- * @property {HTMLElement | null} containerEl - The container element to render into.
+ * @property {HTMLElement|Element | null} containerEl - The container element to render into.
  * @property {ConfigFunction<T>} config - The function to configure the template with data.
  * @property {boolean} debug - Whether to enable debug mode.
  */
