@@ -85,14 +85,6 @@ async function initApp() {
     console.log(data.detail.data);
   });
 
-  // dispatchEvent(
-  //   new CustomEvent(SryHeader.EVENTS.SEARCH, {
-  //     detail: {
-  //       query: "you da man",
-  //     },
-  //   }),
-  // );
-
   console.log("defined sry-header");
   customElements.define("sry-header", SryHeader);
   // Define the custom element
@@ -101,31 +93,51 @@ async function initApp() {
 // Call the function to fetch and display results when the page loads
 document.addEventListener("DOMContentLoaded", initApp);
 
-class SryHeader extends HTMLElement {
+class BaseCustomElement extends HTMLElement {
   constructor() {
     super();
-    // Attach a shadow DOM tree to the instance.
-    // this.attachShadow({ mode: "open" });
+  }
 
-    // // Create the header element
-    // const header = document.createElement("header");
-    // header.textContent = "Default Header Text";
+  /**
+   * Emit a custom event
+   * @param  {String} type   The event type
+   * @param  {Object} detail Any details to pass along with the event
+   */
+  emit(type, detail = {}) {
+    console.info(
+      `[${Object.getPrototypeOf(this.constructor).name}] Emit: ${type}`,
+    );
 
-    // // Apply some styles
-    // const style = document.createElement("style");
-    // style.textContent = `
-    //   header {
-    //     background-color: #f8f9fa;
-    //     color: #343a40;
-    //     padding: 1rem;
-    //     text-align: center;
-    //     font-size: 1.5rem;
-    //     border-bottom: 1px solid #dee2e6;
-    //   }
-    // `;
+    // Create a new event
+    const event = new CustomEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      detail: detail,
+    });
 
-    // Append the header and styles to the shadow root
-    // this.shadowRoot.append(style, header);
+    // Dispatch the event
+    return this.dispatchEvent(event);
+  }
+
+  /**
+   *
+   * @param {string} type
+   * @param {EventListenerOrEventListenerObject} handler
+   */
+  listen(type, handler) {
+    console.info(
+      `[${Object.getPrototypeOf(this.constructor).name}] ${
+        this.constructor.name
+      } is listening for: ${type}`,
+    );
+
+    this.addEventListener(type, handler);
+  }
+}
+
+class SryHeader extends BaseCustomElement {
+  constructor() {
+    super();
   }
 
   static EVENTS = Object.freeze({
@@ -134,7 +146,7 @@ class SryHeader extends HTMLElement {
     RESULTS: "SryHeader:Results",
   });
 
-  // // Observe attributes to reflect changes
+  // Observe attributes to reflect changes
   static get observedAttributes() {
     return ["text"];
   }
@@ -142,9 +154,6 @@ class SryHeader extends HTMLElement {
   // Called when the element is inserted into the DOM
   async connectedCallback() {
     console.log("SryHeader element added to page.");
-    // if (this.hasAttribute("text")) {
-    //   this.updateHeaderText();
-    // }
 
     const children = this.querySelectorAll("*");
     console.log("children", children);
@@ -164,36 +173,14 @@ class SryHeader extends HTMLElement {
       debug: false,
     });
 
-    this.addEventListener(SryHeader.EVENTS.SEARCH, (e) => {
+    this.listen(SryHeader.EVENTS.SEARCH, (e) => {
       this.onSearchHandler(e, templateRenderer);
     });
 
-    // this.addEventListener(SryHeader.EVENTS.READY, (e) => {
-    //   console.log("onready", e);
-    // });
-    // console.log("onready");
     this.emit(SryHeader.EVENTS.READY);
-  }
-  /**
-   * Emit a custom event
-   * @param  {String} type   The event type
-   * @param  {Object} detail Any details to pass along with the event
-   */
-  emit(type, detail = {}) {
-    // Create a new event
-    const event = new CustomEvent(type, {
-      bubbles: true,
-      cancelable: true,
-      detail: detail,
-    });
-
-    // Dispatch the event
-    return this.dispatchEvent(event);
   }
 
   async onSearchHandler(e, templateRenderer) {
-    console.log("each", e, templateRenderer);
-
     const query = e.detail.query;
 
     if (templateRenderer.err) {
@@ -212,19 +199,7 @@ class SryHeader extends HTMLElement {
   // Called when observed attribute values change
   attributeChangedCallback(name, oldValue, newValue) {
     console.log("label", name, oldValue, newValue);
-
-    // if (name === "text" && oldValue !== newValue) {
-    //   this.updateHeaderText();
-    // }
   }
-
-  // // Custom method to update the header text
-  // updateHeaderText() {
-  //   const header = this.shadowRoot.querySelector("header");
-  //   if (header) {
-  //     header.textContent = this.getAttribute("text");
-  //   }
-  // }
 
   /**
    * Fetches and displays the search results using the provided template renderer.
@@ -235,15 +210,10 @@ class SryHeader extends HTMLElement {
       const response = await fetchContrived(query);
       const data = await response.json();
       templateRenderer(data.Items);
-      this.dispatchEvent(
-        new CustomEvent(SryHeader.EVENTS.RESULTS, {
-          bubbles: true,
-          composed: true,
-          detail: {
-            data: data.Items,
-          },
-        }),
-      );
+
+      this.emit(SryHeader.EVENTS.RESULTS, {
+        data: data.Items,
+      });
     } catch (error) {
       console.error("Error fetching search results:", error);
     }
